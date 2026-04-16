@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration-Page</title>
+</head>
+
+<body>
+    <div class="login-container">
+        <h2>Sign-Up</h2>
+        <form id="register-form">
+            <label for="firstName"><b>firstName</b></label>
+            <input type="text" id="firstName" name="firstName" placeholder="Enter firstName" required>
+            <p id="firstName_error"></p>
+
+            <label for="lastName"><b>lastName</b></label>
+            <input type="text" id="lastName" name="lastName" placeholder="Enter lastName" required>
+            <p id="lastName_error"></p>
+
+            <label for="email"><b>E-mail</b></label>
+            <input type="email" name="email" id="email" placeholder="Enter Email" required>
+            <p id="email_error"></p>
+
+            <label for="password"><b>Password</b></label>
+            <input type="password" id="password" name="password" placeholder="Enter Password" required>
+            <p id="password_error"></p>
+            <label for="cpassword"><b>Confirm Password</b></label>
+            <input type="password" id="cpassword" name="cpassword" placeholder="Enter Password" required>
+            <p id="cpassword_error"></p>
+
+            <img src="/getcaptcha" alt="Image of captcha" id="captcha_image">
+            <input type="text" name="captcha_inp" id="captcha_inp">
+            <p class="error" id="captcha_error"></p>
+            <br>
+            <p id="reload">Reload</p>
+            <button type="submit">Sign-Up</button>
+            <label class="remember">
+            </label>
+        </form>
+    </div>
+</body>
+<script src="js/register.js"></script>
+
+</html>
