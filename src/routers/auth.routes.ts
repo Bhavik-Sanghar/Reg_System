@@ -1,8 +1,16 @@
 import { Router, Request, Response } from "express";
 import session from "express-session";
 import captcha from "../modules/captcha/captcha";
+import jwt from "jsonwebtoken";
 import { verifyCaptcha } from "../middleware/verifyCAPTCHA";
-import { loginUser, registerUser } from "../controllers/auth.controller";
+import {
+  getLastpassword,
+  loginUser,
+  passwordReset,
+  registerUser,
+  resetPasswordLink,
+  resetPasswordPage,
+} from "../controllers/auth.controller";
 
 declare module "express-session" {
   interface SessionData {
@@ -16,7 +24,11 @@ declare module "express-session" {
 const router = Router();
 
 router.get("/", async (req: Request, res: Response) => {
-  res.render("register");
+  if (req.cookies.token) {
+    res.render("dashboard");
+  } else {
+    res.render("register");
+  }
 });
 
 router.use(
@@ -48,5 +60,20 @@ router.get("/login", async (req: Request, res: Response) => {
 
 router.post("/login", loginUser);
 
+router.get("/forget-password", (req: Request, res: Response) => {
+  res.render("forgetPassword");
+});
+
+router.post("/getResetLink", resetPasswordLink);
+
+router.get("/resetPage", resetPasswordPage);
+
+router.get("/lastPassword", getLastpassword);
+
+router.get("/resetPassword", (req: Request, res: Response) => {
+  res.render("resetPassword");
+});
+
+router.post("/resetPassword", passwordReset);
 
 export default router;

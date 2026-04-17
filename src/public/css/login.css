@@ -1,0 +1,86 @@
+/* General reset for a clean slate */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f0f2f5; /* Light grey background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.login-container {
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 24px;
+    color: #1c1e21;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    color: #4b4f56;
+    font-size: 14px;
+}
+
+input[type="email"],
+input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #dddfe2;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+input:focus {
+    outline: none;
+    border-color: #1877f2; /* Blue focus border */
+    box-shadow: 0 0 0 2px #e7f3ff;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background-color: #1877f2; /* Professional blue */
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #166fe5;
+}
+
+#remember_me {
+    margin-right: 8px;
+}
+
+#forget_password {
+    text-align: center;
+    margin-top: 16px;
+    color: #1877f2;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+#forget_password:hover {
+    text-decoration: underline;
+}

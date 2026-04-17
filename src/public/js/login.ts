@@ -13,7 +13,9 @@ form_login.addEventListener("submit", async (e) => {
   const password: string = (
     document.getElementById("password") as HTMLInputElement
   ).value.trim();
-  const remember_me: string = (document.getElementById("remember_me") as HTMLInputElement).value;
+  const remember_me : boolean = (document.getElementById("remember_me") as HTMLInputElement).checked;
+
+  console.log(remember_me);
 
   const form_data = { email, password , remember_me };
   if (!emailPattern.test(email) || password.length == 0) {
@@ -44,3 +46,4 @@ form_login.addEventListener("submit", async (e) => {
     window.alert("Log info is wrong please fill again");
   }
 });
+
