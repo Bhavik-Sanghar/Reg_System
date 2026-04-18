@@ -2,12 +2,32 @@ import { Request, Response } from "express";
 import pool from "../config/db.config";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { jwtDecode } from "jwt-decode";
+
+
+const checkEmailExist = async (req: Request , res: Response) => {
+  const email = req.query.email as string;
+  const query = `SELECT email from user_data where email = ?`;
+  try {
+    const result = await pool.query(query, [email]);
+    const rows = result[0] as any[];
+    if(rows.length > 0){
+      res.status(200).json({
+        exist : true,
+        message : "Email is already exist try with another email"
+      })
+    }
+} catch (error) {
+    res.status(500).json({
+      exist : false,
+      message : "Error while checking email existance try again later"
+    })
+}
+}
+
+
 
 const registerUser = async (req: Request, res: Response) => {
   const { firstName, lastName, email, password } = req.body;
-
-  res.cookie("email" , email);
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -19,9 +39,12 @@ const registerUser = async (req: Request, res: Response) => {
     await pool.execute(query, [firstName, lastName, email, hashedPassword]);
     res.status(200).json({ message: "Data store is done...", url: "/login" });
   } catch (error) {
+    // console.log(error);
     res.status(500).json({ message: "Data Store Error from server side...." });
   }
 };
+
+
 
 async function loginUser(req: Request, res: Response) {
   //get data
@@ -85,6 +108,7 @@ const resetPasswordLink = async (req: Request, res: Response) => {
       token: token,
     });
   } catch (error) {
+    // console.log(error);
     res.status(500).json({
       message: "reset link is not genrated",
       token: null,
@@ -94,53 +118,49 @@ const resetPasswordLink = async (req: Request, res: Response) => {
 
 const resetPasswordPage = async (req: Request, res: Response) => {
   const token: string = req.query.q as string;
+  const email: string = req.query.e as string;
+  // console.log(email);
 
-  if (token) {
-    const data = jwtDecode<{ email: string }>(token);
-    const query = `SELECT id, secrete_token , expires_at from password_resets where email = ? and used = 0`;
-    const query2 = `UPDATE password_resets SET used = 1 where id = ?`;
+  const query = `SELECT id, secrete_token , expires_at from password_resets where email = ? and used = 0`;
+  const query2 = `UPDATE password_resets SET used = 1 where id = ?`;
 
-    try {
-      const result = await pool.execute(query, [data.email]);
-      const rows = result[0] as any[];
-      // console.log(rows);
-      await pool.execute(query2, [rows[0].id]);
-      const currentTime = new Date();
-      const expireTime = new Date(rows[0].expires_at);
-      const isTokenMatch = await bcrypt.compare(token, rows[0].secrete_token);
-      const isMatch = isTokenMatch && currentTime < expireTime ? true : false;
+  try {
+    const result = await pool.execute(query, [email]);
+    const rows = result[0] as any[];
+    // console.log(rows);
+    await pool.execute(query2, [rows[0].id]);
+    const currentTime = new Date();
+    const expireTime = new Date(rows[0].expires_at);
+    const isTokenMatch = await bcrypt.compare(token, rows[0].secrete_token);
+    const isMatch = isTokenMatch && currentTime < expireTime ? true : false;
 
-      if (isMatch) {
-        res.status(200).json({
-          message: "Link is Verfied and okay allow user to go on reset page",
-          url: "/resetPassword",
-        });
-      } else {
-        res.status(401).json({
-          message: "Link is Expired or invlaid",
-        });
-      }
-    } catch (error) {
-      res.status(500).json({
-        message: "Link is Invalid...",
+    if (isMatch) {
+      res.status(200).json({
+        message: "Link is Verfied and okay allow user to go on reset page",
+        url: `/resetPassword?e=${email}`,
+      });
+    } else {
+      res.status(401).json({
+        message: "Link is Expired or invlaid",
       });
     }
-  } else {
-    res.status(400).json({
-      message: "No token stored You can only reset password after login one-time",
+  } catch (error) {
+    res.status(500).json({
+      message: "Link is Invalid...",
     });
   }
 };
 
 const getLastpassword = async (req: Request, res: Response) => {
   const password = req.query.p as string;
-  const data = jwtDecode<{ email: string }>(req.cookies.token);
+  const email = req.query.e as string;
+  // console.log(email);
   const query = `
   SELECT userPassword from user_data where email = ?
   `;
 
   try {
-    const result = await pool.query(query, [data.email]);
+    const result = await pool.query(query, [email]);
     const rows = result[0] as any[];
     // console.log(rows);
     const isMatch: boolean = await bcrypt.compare(
@@ -174,10 +194,7 @@ const passwordReset = async (req: Request, res: Response) => {
   `;
 
   try {
-    const token = req.cookies.token as string 
-    const data = jwtDecode<{ email: string }>(token);
-    const email = data.email;
-    const { password } = req.body;
+    const { password, email } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
     await pool.execute(query, [hashedPassword, email]);
     res.status(200).json({
@@ -192,6 +209,7 @@ const passwordReset = async (req: Request, res: Response) => {
 };
 
 export {
+  checkEmailExist,
   registerUser,
   loginUser,
   resetPasswordLink,

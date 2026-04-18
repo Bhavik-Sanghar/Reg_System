@@ -5,12 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registration-Page</title>
+    <link rel="stylesheet" href="css/register.css">
 </head>
 
 <body>
     <div class="login-container">
         <h2>Sign-Up</h2>
         <form id="register-form">
+            <p id="required_error"></p>
             <label for="firstName"><b>firstName</b></label>
             <input type="text" id="firstName" name="firstName" placeholder="Enter firstName" required>
             <p id="firstName_error"></p>
@@ -31,14 +33,15 @@
             <p id="cpassword_error"></p>
 
             <img src="/getcaptcha" alt="Image of captcha" id="captcha_image">
+            <p id="reload">Reload</p>
             <input type="text" name="captcha_inp" id="captcha_inp">
             <p class="error" id="captcha_error"></p>
             <br>
-            <p id="reload">Reload</p>
             <button type="submit">Sign-Up</button>
             <label class="remember">
             </label>
         </form>
+        <a href="/login"></a><button id="login">Log-in</button></a>
     </div>
 </body>
 <script src="js/register.js"></script>

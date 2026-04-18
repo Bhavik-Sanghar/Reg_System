@@ -39,6 +39,45 @@ register_form.addEventListener("submit", async (e) => {
     document.getElementById("captcha_inp") as HTMLInputElement
   ).value.trim();
 
+  const isUserExist = await fetch(`/checkEmailExist?email=${email}`);
+  const isUserExistRes = await isUserExist.json();
+  if(isUserExistRes.exist){
+    isVal = false;
+    (
+      document.getElementById("email_error") as HTMLParagraphElement
+    ).innerHTML = `${isUserExistRes.message}`;
+    reload_captcha();
+  } else {
+    (
+      document.getElementById("email_error") as HTMLParagraphElement
+    ).innerHTML = ``;
+  } 
+
+  if(password !== cpassword){
+    isVal = false;
+    (
+      document.getElementById("cpassword_error") as HTMLParagraphElement
+    ).innerHTML = `Confirm Password should match with password`;
+    reload_captcha();
+  } else {
+    (
+      document.getElementById("cpassword_error") as HTMLParagraphElement
+    ).innerHTML = ``;
+  }
+
+  if (!firstName || !lastName || !email || !password || !cpassword || !captcha_inp) {
+    isVal = false;
+    (
+      document.getElementById("required_error") as HTMLParagraphElement
+    ).innerHTML = `All fields are required`;
+    reload_captcha();
+  }
+    else {
+    (
+      document.getElementById("required_error") as HTMLParagraphElement
+    ).innerHTML = ``;
+  } 
+
   const form_data = {
     firstName,
     lastName,

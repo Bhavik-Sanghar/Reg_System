@@ -4,6 +4,7 @@ import captcha from "../modules/captcha/captcha";
 import jwt from "jsonwebtoken";
 import { verifyCaptcha } from "../middleware/verifyCAPTCHA";
 import {
+  checkEmailExist,
   getLastpassword,
   loginUser,
   passwordReset,
@@ -52,6 +53,7 @@ router.get("/getcaptcha", async (req: Request, res: Response) => {
   res.send(captcha_data.data);
 });
 
+router.get("/checkEmailExist", checkEmailExist);
 router.post("/register", verifyCaptcha, registerUser);
 
 router.get("/login", async (req: Request, res: Response) => {
@@ -71,7 +73,8 @@ router.get("/resetPage", resetPasswordPage);
 router.get("/lastPassword", getLastpassword);
 
 router.get("/resetPassword", (req: Request, res: Response) => {
-  res.render("resetPassword");
+  const email = req.query.e;
+  res.render("resetPassword", { email });
 });
 
 router.post("/resetPassword", passwordReset);

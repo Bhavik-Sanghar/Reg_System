@@ -1,11 +1,11 @@
 {
   "name": "reg_system",
   "version": "1.0.0",
-  "description": "",
+  "description": "Date : 16/4/2026",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc && cpy 'src/views/**/*' dist/views && cpy 'src/public/**/*' dist/public && cpy 'src/media/**/*' dist/media"
+    "build": "tsc && cpy \"src/views/**/*\" dist/views && cpy \"src/public/**/*\" dist/public && nodemon dist/server.js"
   },
   "keywords": [],
   "author": "",
@@ -13,7 +13,6 @@
   "dependencies": {
     "bcrypt": "^6.0.0",
     "brcypt": "^1.0.1",
-    "canvas": "^3.2.3",
     "captcha-canvas": "^3.4.0",
     "cookie-parser": "^1.4.7",
     "cpy-cli": "^7.0.0",
@@ -38,5 +37,14 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/passport": "^1.0.17",
     "@types/passport-jwt": "^4.0.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bhavik-Sanghar/Reg_System.git"
+  },
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Bhavik-Sanghar/Reg_System/issues"
+  },
+  "homepage": "https://github.com/Bhavik-Sanghar/Reg_System#readme"
 }

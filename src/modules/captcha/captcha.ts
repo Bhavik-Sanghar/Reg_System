@@ -1,4 +1,4 @@
-const { createCanvas } = require("canvas");
+// const { createCanvas } = require("canvas");
 const fs = require("fs");
 const path = require("path");
 
@@ -59,12 +59,14 @@ const captchaDir = path.join(__dirname, "../../..", "src", "media", "captcha");
 //   }
 // }
 
+var svgCaptcha = require("svg-captcha");
 
-var svgCaptcha = require('svg-captcha');
- 
-const captcha = () =>{
-    return svgCaptcha.createMathExpr({mathMin : 2 , mathMax : 7 , mathOperator : "+"} )
-}
+const captcha = () => {
+  return svgCaptcha.createMathExpr({
+    mathMin: 2,
+    mathMax: 7,
+    mathOperator: "+",
+  });
+};
 // Export the function for use anywhere in the app
-export default captcha
-
+export default captcha;
