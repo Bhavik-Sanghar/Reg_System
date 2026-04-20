@@ -99,16 +99,16 @@ async function loginUser(req: Request, res: Response) {
 
   //get passwordhash from db to match
   const query: string = `SELECT userPassword from user_data where email = ?`;
-  
+
   try {
     const [result] = await pool.query(query, [email]);
-    const rows = result as any[]; 
+    const rows = result as any[];
 
     const maxAge = remember_me == "on" ? "7d" : "1h";
 
     if (rows.length > 0) {
-      const user = rows[0]; 
-      
+      const user = rows[0];
+
       const isMatch: boolean = await bcrypt.compare(
         password,
         user.userPassword,
@@ -139,21 +139,33 @@ async function loginUser(req: Request, res: Response) {
         await logEvent(null, "auth.login_successful", req, {
           user_email: email,
         });
-        return res.status(200).json({ message: "User Validate Done", url: "/user" });
+        return res
+          .status(200)
+          .json({ message: "User Validate Done", url: "/user" });
       } else {
         // This handles the case where email exists but password is WRONG
-        await logEvent(null, "auth.login_fail", req, { attempted_email: email });
+        await logEvent(null, "auth.login_fail", req, {
+          attempted_email: email,
+        });
+
         const failed_attempt = await client.incr(key);
-        
+        if (failed_attempt >= 4) {
+          await client.expire(key, 3600);
+          const ttl = await client.ttl(key);
+          return res.status(429).json({
+            message: "Too many Failed attempts.",
+            retryAfter: `${Math.ceil(ttl / 60)} minutes`,
+          });
+        }
+
         return res.status(401).json({
           message: `Login failed. ${4 - failed_attempt} attempts remaining.`,
         });
       }
     } else {
-
       // await pool.execute(login_attempt_query, [email, ip, false]);
       const failed_attempt = await client.incr(key);
-      
+
       if (failed_attempt >= 4) {
         await client.expire(key, 3600);
         const ttl = await client.ttl(key);
@@ -169,18 +181,17 @@ async function loginUser(req: Request, res: Response) {
       });
     }
   } catch (error) {
-    console.error(error); 
+    console.error(error);
     res.status(500).json({ message: "Server side error while login" });
   }
 }
-
 
 const resetPasswordLink = async (req: Request, res: Response) => {
   const email = req.body.email;
 
   const token = jwt.sign(
-    { 
-      email: email
+    {
+      email: email,
     },
     process.env.JWT_SECERT_KEY || "hmmmmmm",
     { expiresIn: "10m" },
@@ -311,22 +322,12 @@ const passwordReset = async (req: Request, res: Response) => {
 
 const forgetPassword = async (req: Request, res: Response) => {
   const email = req.query.e;
-   await logEvent(null, "auth.forgetPasswordPage", req, {
-      user_email: email,
-    });
+  await logEvent(null, "auth.forgetPasswordPage", req, {
+    user_email: email,
+  });
   res.render("forgetPassword");
 };
 
-const getLogs = async () => {
-  const query = `SELECT * from audit_logs`;
-
-  try {
-    const [logs] = await pool.execute(query);
-    return logs;
-  } catch (error) {
-    console.log(error);
-  }
-}
 
 export {
   checkEmailExist,
@@ -337,5 +338,4 @@ export {
   getLastpassword,
   passwordReset,
   forgetPassword,
-  getLogs
 };

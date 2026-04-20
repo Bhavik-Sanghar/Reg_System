@@ -39,7 +39,7 @@ form_login.addEventListener("submit", async (e) => {
     } else if (response.status == 500) {
       alert("Server Side issue please try again latar....");
     } else if (response.status == 401) {
-      alert("Invalid Credentials");
+      alert(res.message);
     } else if(response.status == 429) {
       alert(`${res.message} \nTry again after : ${res.retryAfter}`)
     }

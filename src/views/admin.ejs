@@ -22,32 +22,61 @@
                     <th>Time Stamp</th>
                 </tr>
             </thead>
-            <% 
-                const formatMetadata = (metadata) => {
-                    if (metadata == null) return "-";
-                    if (typeof metadata === "object") return JSON.stringify(metadata);
+            <% const formatMetadata=(metadata)=> {
+                if (metadata == null) return "-";
 
-                    if (typeof metadata === "string") {
-                        try {
-                            return JSON.stringify(JSON.parse(metadata));
-                        } catch {
-                            return metadata;
-                        }
-                    }
+                let data;
+                try {
+                data = (typeof metadata === "string") ? JSON.parse(metadata) : metadata;
+                } catch (e) {
+                return metadata; 
+                }
 
-                    return String(metadata);
+                if (typeof data === "object" && data !== null) {
+                return Object.entries(data)
+                .map(([key, value]) => {
+                // Clean up keys (e.g., "attempted_email" -> "Attempted Email")
+                const cleanKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                return `<strong>${cleanKey}:</strong> ${value}`;
+                })
+                .join('<br>'); // Use <br> to put each pair on a new line
+                }
+
+                return String(metadata);
                 };
-            %>
-            <% logs.forEach((element,index)=> { %>
-                <tr>
-                    <td><%= index + 1 %></td>
-                    <td><%= element.event_type %></td>
-                    <td><%= element.ip_address %></td>
-                    <td><%= element.user_agent || '-' %></td>
-                    <td><%= formatMetadata(element.metadata) %></td>
-                    <td><%= new Date(element.created_at).toLocaleString() %></td>
-                    </tr>
-            <% }); %>
+                %>
+
+                <% const getBrowserIcon=(ua)=> {
+                    if (!ua) return "❓";
+                    if (ua.includes("Chrome")) return "🌐 Chrome";
+                    if (ua.includes("Firefox")) return "🦊 Firefox";
+                    if (ua.includes("Safari") && !ua.includes("Chrome")) return "🧭 Safari";
+                    if (ua.includes("Edg")) return "🟦 Edge";
+                    return "💻 Generic";
+                    };
+                    %>
+                    <% logs.forEach((element,index)=> { %>
+                        <tr>
+                            <td>
+                                <%= index + 1 %>
+                            </td>
+                            <td>
+                                <%= element.event_type %>
+                            </td>
+                            <td>
+                                <%= element.ip_address %>
+                            </td>
+                            <td title="<%= element.user_agent %>">
+                                <%= getBrowserIcon(element.user_agent) %>
+                            </td>
+                            <td>
+                                <%- formatMetadata(element.metadata) %>
+                            </td>
+                            <td>
+                                <%= new Date(element.created_at).toLocaleString() %>
+                            </td>
+                        </tr>
+                        <% }); %>
         </table>
     </div>
 </body>

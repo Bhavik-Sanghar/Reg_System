@@ -29,7 +29,8 @@
     "skia-canvas": "^3.0.8",
     "svg-captcha": "^1.4.0",
     "text-to-image": "^8.0.1",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.2",
+    "winston": "^3.19.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",

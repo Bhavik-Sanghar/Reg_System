@@ -14,6 +14,7 @@ import {
   resetPasswordPage,
 } from "../controllers/auth.controller";
 import rateLimiter from "../middleware/rateLimiting";
+import loggerMiddleware from "../middleware/logger";
 
 declare module "express-session" {
   interface SessionData {
@@ -27,6 +28,7 @@ declare module "express-session" {
 const router = Router();
 
 router.use(rateLimiter)
+router.use(loggerMiddleware)
 
 router.get("/", async (req: Request, res: Response) => {
   if (req.cookies.token) {

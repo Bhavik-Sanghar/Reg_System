@@ -2,13 +2,14 @@ import { Router, Request, Response } from "express";
 import { authUser } from "../middleware/validateUser";
 import jwt from "jsonwebtoken";
 
-import { getLogs } from "../controllers/auth.controller";
+import { getLogs } from "../controllers/user.controller";
+import { logout } from "../controllers/user.controller";
 
 const router = Router();
 
 router.use(authUser);
 
-router.get("/", authUser, async (req: Request, res: Response) => {
+router.get("/", async (req: Request, res: Response) => {
   const JWT_SECERT_KEY = process.env.JWT_SECERT_KEY || "Hmmmmmmmm";
   const token = req.cookies.token;
   const decode_data = jwt.verify(token, JWT_SECERT_KEY) as { role: string };
@@ -19,5 +20,7 @@ router.get("/", authUser, async (req: Request, res: Response) => {
     return res.render("dashboard");
   }
 });
+
+router.post("/logout", logout);
 
 export default router;
