@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+
+<body>
+    <h1>User Dashboard.....</h1>
+    <div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Sr.</th>
+                    <th>Event</th>
+                    <th>IP</th>
+                    <th>User Agent</th>
+                    <th>Metadata</th>
+                    <th>Time Stamp</th>
+                </tr>
+            </thead>
+            <% 
+                const formatMetadata = (metadata) => {
+                    if (metadata == null) return "-";
+                    if (typeof metadata === "object") return JSON.stringify(metadata);
+
+                    if (typeof metadata === "string") {
+                        try {
+                            return JSON.stringify(JSON.parse(metadata));
+                        } catch {
+                            return metadata;
+                        }
+                    }
+
+                    return String(metadata);
+                };
+            %>
+            <% logs.forEach((element,index)=> { %>
+                <tr>
+                    <td><%= index + 1 %></td>
+                    <td><%= element.event_type %></td>
+                    <td><%= element.ip_address %></td>
+                    <td><%= element.user_agent || '-' %></td>
+                    <td><%= formatMetadata(element.metadata) %></td>
+                    <td><%= new Date(element.created_at).toLocaleString() %></td>
+                    </tr>
+            <% }); %>
+        </table>
+    </div>
+</body>
+
+</html>

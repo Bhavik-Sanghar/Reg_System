@@ -14,14 +14,15 @@ export const authUser = (req: Request, res: Response, next: NextFunction) => {
     return res.redirect("/login");
   }
   try {
-    jwt.verify(token, JWT_SECERT_KEY);
-    // console.log(`Hiiii`);
+    const decode_data =jwt.verify(token, JWT_SECERT_KEY);
     next();
   } catch (error) {
     console.log(`Auth errro : ${error}`);
     res.redirect("/login");
   }
 };
+
+
 
 
 // const cookieExtractor = function(req : Request) {

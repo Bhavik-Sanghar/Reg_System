@@ -95,19 +95,22 @@ register_form.addEventListener("submit", async (e) => {
     body: JSON.stringify(form_data),
   });
 
+  const res = await response.json();
   if (response.status == 400) {
-    const res = await response.json();
     (
       document.getElementById("captcha_error") as HTMLParagraphElement
     ).innerHTML = `${res.message}`;
     reload_captcha();
   }
 
-  if(response.status == 200){
-    const res = await response.json();
+  else if(response.status == 200){
     console.log(res);
     window.location.href = `${res.url}`
   }
+
+  else if(response.status == 429) {
+      alert(`${res.message} \nTry again after : ${res.retryAfter}`)
+    }
 });
 
 function reload_captcha() {

@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import { verifyCaptcha } from "../middleware/verifyCAPTCHA";
 import {
   checkEmailExist,
+  forgetPassword,
   getLastpassword,
   loginUser,
   passwordReset,
@@ -12,6 +13,7 @@ import {
   resetPasswordLink,
   resetPasswordPage,
 } from "../controllers/auth.controller";
+import rateLimiter from "../middleware/rateLimiting";
 
 declare module "express-session" {
   interface SessionData {
@@ -23,6 +25,8 @@ declare module "express-session" {
 }
 
 const router = Router();
+
+router.use(rateLimiter)
 
 router.get("/", async (req: Request, res: Response) => {
   if (req.cookies.token) {
@@ -60,11 +64,9 @@ router.get("/login", async (req: Request, res: Response) => {
   res.render("login");
 });
 
-router.post("/login", loginUser);
+router.post("/login",loginUser);
 
-router.get("/forget-password", (req: Request, res: Response) => {
-  res.render("forgetPassword");
-});
+router.get("/forget-password", forgetPassword)
 
 router.post("/getResetLink", resetPasswordLink);
 

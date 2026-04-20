@@ -2,29 +2,58 @@ import { Request, Response } from "express";
 import pool from "../config/db.config";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import client from "../config/redis.config";
 
+const logEvent = async (
+  userId: string | number | null,
+  eventType: string,
+  req: Request,
+  metadata = {},
+) => {
+  try {
+    const client_ip = req.ip?.split(":") as [];
+    const ip = client_ip[client_ip?.length - 1];
+    const logData = {
+      user_id: userId || null, // Null if user isn't logged in yet
+      event_type: eventType,
+      ip_address: ip,
+      user_agent: req.headers["user-agent"],
+      metadata: JSON.stringify(metadata),
+    };
 
-const checkEmailExist = async (req: Request , res: Response) => {
+    // Insert into MySQL
+    await pool.query("INSERT INTO audit_logs SET ?", logData);
+  } catch (error) {
+    // We console.error but don't "throw" because we don't
+    // want a logging failure to crash the whole login process
+    console.error("Audit Log Error:", error);
+  }
+};
+
+const checkEmailExist = async (req: Request, res: Response) => {
   const email = req.query.email as string;
   const query = `SELECT email from user_data where email = ?`;
   try {
     const result = await pool.query(query, [email]);
     const rows = result[0] as any[];
-    if(rows.length > 0){
+    if (rows.length > 0) {
       res.status(200).json({
-        exist : true,
-        message : "Email is already exist try with another email"
-      })
+        exist: true,
+        message: "Email is already exist try with another email",
+      });
+    } else {
+      res.status(201).json({
+        exist: false,
+        message: "Email is not in DB user can create account",
+      });
     }
-} catch (error) {
+  } catch (error) {
     res.status(500).json({
-      exist : false,
-      message : "Error while checking email existance try again later"
-    })
-}
-}
-
-
+      exist: false,
+      message: "Error while checking email existance try again later",
+    });
+  }
+};
 
 const registerUser = async (req: Request, res: Response) => {
   const { firstName, lastName, email, password } = req.body;
@@ -37,57 +66,122 @@ const registerUser = async (req: Request, res: Response) => {
 
   try {
     await pool.execute(query, [firstName, lastName, email, hashedPassword]);
+    await logEvent(null, "auth.register_successful", req, {
+      user_email: email,
+    });
     res.status(200).json({ message: "Data store is done...", url: "/login" });
   } catch (error) {
     // console.log(error);
+    await logEvent(null, "auth.register_fail", req, { user_email: email });
+
     res.status(500).json({ message: "Data Store Error from server side...." });
   }
 };
 
-
-
 async function loginUser(req: Request, res: Response) {
+  const client_ip = req.ip?.split(":") || [];
+  const ip = client_ip[client_ip.length - 1];
+  const key = `failed_attempts:${ip}`;
+  const maxAttempt = 100;
+
+  // console.log(ip);
+
+  //query for login_attempts
+  // const login_attempt_query = `
+  // INSERT INTO login_attempts(identifier , ip_address , is_successful) VALUES (? , ? , ?);
+  // `;
+
   //get data
   const { email, password, remember_me } = req.body;
 
+  //check if email exist or not
+  const email_query = `SELECT email from user_data where email = ?`;
+
   //get passwordhash from db to match
   const query: string = `SELECT userPassword from user_data where email = ?`;
-  const [result] = await pool.query(query, [email]);
+  
+  try {
+    const [result] = await pool.query(query, [email]);
+    const rows = result as any[]; 
 
-  const hash = (result as any)[0];
-  const isMatch: boolean = await bcrypt.compare(password, hash.userPassword);
+    const maxAge = remember_me == "on" ? "7d" : "1h";
 
-  const maxAge = remember_me == "on" ? "7d" : "1h";
+    if (rows.length > 0) {
+      const user = rows[0]; 
+      
+      const isMatch: boolean = await bcrypt.compare(
+        password,
+        user.userPassword,
+      );
 
-  if (isMatch) {
-    const JWT_SECERT_KEY = process.env.JWT_SECERT_KEY || "Hmmmmmmmm";
-    const token = jwt.sign({ email: email }, JWT_SECERT_KEY, {
-      expiresIn: maxAge,
-    });
+      if (isMatch) {
+        await client.del(key);
+        const JWT_SECERT_KEY = process.env.JWT_SECERT_KEY || "Hmmmmmmmm";
 
-    if (remember_me == "on") {
-      res.cookie("token", token, {
-        httpOnly: true,
-        maxAge: 604800000, // 7 days in milliseconds
-      });
+        const role = email == "admin@outlook.com" ? "admin" : "user";
+        const token = jwt.sign({ email: email, role: role }, JWT_SECERT_KEY, {
+          expiresIn: maxAge,
+        });
+
+        if (remember_me == "on") {
+          res.cookie("token", token, {
+            httpOnly: true,
+            maxAge: 604800000, // 7 days in milliseconds
+          });
+        } else {
+          res.cookie("token", token, {
+            httpOnly: true,
+            maxAge: 1000 * 60 * 60,
+          });
+        }
+
+        // await pool.execute(login_attempt_query, [email, ip, true]);
+        await logEvent(null, "auth.login_successful", req, {
+          user_email: email,
+        });
+        return res.status(200).json({ message: "User Validate Done", url: "/user" });
+      } else {
+        // This handles the case where email exists but password is WRONG
+        await logEvent(null, "auth.login_fail", req, { attempted_email: email });
+        const failed_attempt = await client.incr(key);
+        
+        return res.status(401).json({
+          message: `Login failed. ${4 - failed_attempt} attempts remaining.`,
+        });
+      }
     } else {
-      res.cookie("token", token, {
-        httpOnly: true,
-        maxAge: 1000 * 60 * 60,
+
+      // await pool.execute(login_attempt_query, [email, ip, false]);
+      const failed_attempt = await client.incr(key);
+      
+      if (failed_attempt >= 4) {
+        await client.expire(key, 3600);
+        const ttl = await client.ttl(key);
+        return res.status(429).json({
+          message: "Too many Failed attempts.",
+          retryAfter: `${Math.ceil(ttl / 60)} minutes`,
+        });
+      }
+
+      await logEvent(null, "auth.login_fail", req, { attempted_email: email });
+      return res.status(401).json({
+        message: `Login failed. ${4 - failed_attempt} attempts remaining.`,
       });
     }
-
-    res.status(200).json({ message: "User Validate Done", url: "/user" });
-  } else {
-    res.status(401).json({ message: "User valdiation fail" });
+  } catch (error) {
+    console.error(error); 
+    res.status(500).json({ message: "Server side error while login" });
   }
 }
+
 
 const resetPasswordLink = async (req: Request, res: Response) => {
   const email = req.body.email;
 
   const token = jwt.sign(
-    { email: email },
+    { 
+      email: email
+    },
     process.env.JWT_SECERT_KEY || "hmmmmmm",
     { expiresIn: "10m" },
   );
@@ -193,20 +287,46 @@ const passwordReset = async (req: Request, res: Response) => {
   WHERE email = ?
   `;
 
+  const { password, email } = req.body;
   try {
-    const { password, email } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
     await pool.execute(query, [hashedPassword, email]);
+    await logEvent(null, "auth.resetPassword_successful", req, {
+      user_email: email,
+    });
+
     res.status(200).json({
       message: "Password reset done redirect user to login page",
       url: "/login",
     });
   } catch (error) {
+    await logEvent(null, "auth.resetPassword_fail", req, {
+      user_email: email,
+    });
     res.status(500).json({
       message: "Error while storing new password .. Try agin later ",
     });
   }
 };
+
+const forgetPassword = async (req: Request, res: Response) => {
+  const email = req.query.e;
+   await logEvent(null, "auth.forgetPasswordPage", req, {
+      user_email: email,
+    });
+  res.render("forgetPassword");
+};
+
+const getLogs = async () => {
+  const query = `SELECT * from audit_logs`;
+
+  try {
+    const [logs] = await pool.execute(query);
+    return logs;
+  } catch (error) {
+    console.log(error);
+  }
+}
 
 export {
   checkEmailExist,
@@ -216,4 +336,6 @@ export {
   resetPasswordPage,
   getLastpassword,
   passwordReset,
+  forgetPassword,
+  getLogs
 };

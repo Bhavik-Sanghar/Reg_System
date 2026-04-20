@@ -32,18 +32,28 @@ form_login.addEventListener("submit", async (e) => {
     });
 
     console.log(response.status);
+    const res = await response.json();
 
     if (response.status == 200) {
-      const res = await response.json();
       window.location.href = `${res.url}`;
     } else if (response.status == 500) {
       alert("Server Side issue please try again latar....");
     } else if (response.status == 401) {
       alert("Invalid Credentials");
+    } else if(response.status == 429) {
+      alert(`${res.message} \nTry again after : ${res.retryAfter}`)
     }
   }
   if (!isVal) {
     window.alert("Log info is wrong please fill again");
   }
 });
+
+
+(document.getElementById("forget-password") as HTMLParagraphElement).addEventListener("click" , async()=>{
+  const email: string = (
+    document.getElementById("email") as HTMLInputElement
+  ).value.trim();
+  const response = await fetch(`/forget-password?e=${email}`)
+})
 

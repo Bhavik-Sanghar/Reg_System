@@ -39,5 +39,7 @@
   } else if (response.status == 500) {
     (document.getElementById("reset_link") as HTMLDivElement).innerHTML =
       `Hmmmmmmmmm Looks like email is not valid...`;
-  }
+  } else if(response.status == 429) {
+      (document.getElementById("reset_link") as HTMLDivElement).innerHTML = `${res.message} \nTry again after : ${res.retryAfter}`;
+    }
 });

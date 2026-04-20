@@ -1,0 +1,83 @@
+/* General Styling */
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background-color: #f4f7f6;
+    color: #333;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    border-left: 5px solid #3498db;
+    padding-left: 15px;
+}
+
+/* Container for responsiveness */
+div {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow-x: auto; /* Adds scrollbar if table is too wide */
+}
+
+/* Table Styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 0.9rem;
+}
+
+thead {
+    background-color: #3498db;
+    color: white;
+}
+
+th, td {
+    text-align: left;
+    padding: 12px 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Make header text look professional */
+th {
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+/* Zebra Striping for rows */
+tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tbody tr:hover {
+    background-color: #f1f7fd;
+    transition: background-color 0.2s;
+}
+
+/* Handle long text in Metadata and User Agent */
+td:nth-child(4), /* User Agent */
+td:nth-child(5) { /* Metadata */
+    max-width: 300px;
+    word-break: break-all;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+/* Sr. column width */
+td:first-child {
+    font-weight: bold;
+    color: #3498db;
+    width: 40px;
+}
+
+/* Timestamp Styling */
+td:last-child {
+    white-space: nowrap;
+    color: #888;
+}
