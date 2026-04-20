@@ -4,6 +4,8 @@
     const password = (document.getElementById("password") as HTMLInputElement).value.trim();
     const cpassword = (document.getElementById("cpassword") as HTMLInputElement).value.trim();
 
+
+
     if(password !== cpassword){
         isVal = false
     }
